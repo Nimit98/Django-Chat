@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <title>Chat Rooms</title>
+</head>
+
+<body>
+  <h1>{{request.user.username}}</h1>
+  What chat room would you like to enter?<br />
+  <input id="room-name-input" type="text" size="100" /><br />
+  <button onclick="room_id()">Enter Room</button><br />
+
+  {% for user in users %}
+  <a href="{% url 'chat:get_id' pk=user.pk %}">{{user.username}}</a>
+  {% endfor %}
+
+  <script>
+    document.querySelector("#room-name-input").focus();
+    document.querySelector("#room-name-input").onkeyup = function (e) {
+      if (e.keyCode === 13) {
+        // enter, return
+        document.querySelector("#room-name-submit").click();
+      }
+    };
+
+    function room_id() {
+      room = document.querySelector("#room-name-input").value
+      $.ajax({
+        type: 'POST',
+        url: "{% url 'chat:room_id' %}",
+        data: {
+          'room': room
+        },
+        success: function () {
+          window.location.pathname = "/chat/chat-room/" + room + "/";
+          console.log('submitted')
+        }
+      })
+    }
+
+
+
+    document.querySelector("#room-name-submit").onclick = function (e) {
+      var roomName = document.querySelector("#room-name-input").value;
+      window.location.pathname = "/chat/" + roomName + "/";
+    };
+  </script>
+</body>
+
+</html>

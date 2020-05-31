@@ -1,0 +1,26 @@
+.conversation {
+  height: 460px;
+  width: 100%;
+  display: flex;
+  background-color: #d3d3d3;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: auto;
+}
+.my_mess {
+  background-color: #e8effa;
+  padding: 10px;
+  border-radius: 10px;
+  align-self: flex-end;
+  width: 80%;
+  word-wrap: break-word;
+  margin: 4px;
+}
+.received {
+  background-color: #eff0e9;
+  padding: 10px;
+  border-radius: 10px;
+  width: 80%;
+  word-wrap: break-word;
+  margin: 4px;
+}

@@ -1,0 +1,16 @@
+{% extends "login/base.html" %}
+
+{% block body %}
+<title>Index</title>
+<div class="container">
+    <div class="jumbotron">
+        <h2><a href="{% url 'chat:index' %}">Chat</a></h2>
+        {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="btn btn-outline-warning">Logout</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline-success">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-outline-success">Register</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

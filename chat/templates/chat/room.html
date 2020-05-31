@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Chat Room</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+</head>
+
+<body>
+  <h1 id="user">{{request.user.username}}</h1>
+  <div class="conversation" id="chat-log"></div>
+  <br />
+  <input id="chat-message-input" type="text" size="100" /><br />
+  <input id="chat-message-submit" type="button" value="Send" />
+  {{ room_name|json_script:"room-name" }}
+  <script>
+    const user = document.querySelector("#user").innerHTML;
+    const roomName = JSON.parse(
+      document.getElementById("room-name").textContent
+    );
+
+    const chatSocket = new WebSocket(
+      "ws://" + window.location.host + "/ws/chat/chat-room/" + roomName + "/"
+    );
+
+    chatSocket.onmessage = function (e) {
+      const data = JSON.parse(e.data);
+      if (data.label == 'private') {
+        if (data.state == "fetched_messages" && user == data.user) {
+          data.messages.map((message) => {
+            user == message.user
+              ? (document.querySelector(
+                "#chat-log"
+              ).innerHTML += `<p class="my_mess">${message.content}</p>`)
+              : (document.querySelector(
+                "#chat-log"
+              ).innerHTML += `<p class="received">${message.content}</p>`);
+          });
+        } else {
+          user == data.user
+            ? (document.querySelector(
+              "#chat-log"
+            ).innerHTML += `<p class="my_mess">${data.message}</p>`)
+            : (document.querySelector(
+              "#chat-log"
+            ).innerHTML += `<p class="received">${data.message}</p>`);
+        }
+      }
+      else {
+        if (data.state == "fetched_messages" && user == data.user) {
+          data.messages.map((message) => {
+            user == message.user
+              ? (document.querySelector(
+                "#chat-log"
+              ).innerHTML += `<p class="my_mess"><small class='text-danger'>${message.user}: </small>${message.content}</p>`)
+              : (document.querySelector(
+                "#chat-log"
+              ).innerHTML += `<p class="received"><small class='text-danger'>${message.user}: </small>${message.content}</p>`);
+          });
+        } else {
+          user == data.user
+            ? (document.querySelector(
+              "#chat-log"
+            ).innerHTML += `<p class="my_mess"><small class='text-danger'>${data.user}: </small>${data.message}</p>`)
+            : (document.querySelector(
+              "#chat-log"
+            ).innerHTML += `<p class="received"><small class='text-danger'>${data.user}: </small>${data.message}</p>`);
+        }
+      }
+      document.getElementById('chat-log').lastChild.scrollIntoView(false);
+    };
+
+    chatSocket.onclose = function (e) {
+      console.error("Chat socket closed unexpectedly");
+    };
+
+    document.querySelector("#chat-message-input").focus();
+    document.querySelector("#chat-message-input").onkeyup = function (e) {
+      if (e.keyCode === 13) {
+        // enter, return
+        console.log();
+        document.querySelector("#chat-message-submit").click();
+      }
+    };
+
+    setTimeout(() => {
+      chatSocket.send(
+        JSON.stringify({
+          command: "fetch messages",
+          chat_id: roomName,
+          user: user,
+        })
+      );
+    }, 500);
+
+    document.querySelector("#chat-message-submit").onclick = function (e) {
+      const messageInputDom = document.querySelector("#chat-message-input");
+      const message = messageInputDom.value;
+      chatSocket.send(
+        JSON.stringify({
+          command: "new message",
+          message: message,
+          user: user,
+          chat_id: roomName,
+        })
+      );
+      messageInputDom.value = "";
+    };
+  </script>
+</body>
+
+</html>

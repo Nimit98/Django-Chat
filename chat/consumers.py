@@ -1,0 +1,103 @@
+from channels.generic.websocket import WebsocketConsumer
+from asgiref.sync import async_to_sync
+import json
+from channels.layers import get_channel_layer
+from channels.generic.websocket import AsyncWebsocketConsumer
+from .models import Messages, RoomChat, Chat
+import time
+
+
+class ChatConsumer(WebsocketConsumer):
+    def connect(self):
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_group_name = 'chat_%s' % self.room_name
+
+        # Join room group
+        async_to_sync(self.channel_layer.group_add)(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        # Leave room group
+        async_to_sync(self.channel_layer.group_discard)(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    def messages_to_json(self, messages, chat_id):
+        result = []
+        for message in messages:
+            result.append(self.message_to_json(message, chat_id))
+        return result
+
+    def message_to_json(self, message, chat_id):
+        return {
+            'user': message.user,
+            'content': message.messages,
+            'chat_id': chat_id
+        }
+
+    # Receive message from WebSocket
+    def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        command = text_data_json['command']
+        chat_id = text_data_json['chat_id']
+        user = text_data_json['user']
+        try:
+            c = Chat.objects.get(chat_id=chat_id)
+            label = 'private'
+        except Chat.DoesNotExist:
+            c = RoomChat.objects.get(name=chat_id)
+            label = 'room'
+
+        # FETCH MESSAGES
+        if command == 'fetch messages':
+            messages = Messages.objects.filter(chat_id=chat_id)
+            content = {
+                'state': 'fetched_messages',
+                'user': user,
+                'label': label,
+                'messages': self.messages_to_json(messages, chat_id)
+            }
+            self.send_message(content)
+
+        # SAVE MESSAGES
+        else:
+            message = text_data_json['message']
+            user = text_data_json['user']
+            new_message = Messages(
+                user=user, chat_id=chat_id, messages=message)
+            new_message.save()
+
+            # Send message to room group
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'user': user,
+                    'label': label,
+                    'state': 'sent_message'
+                }
+            )
+
+    # Receive message from room group
+    def chat_message(self, event):
+        message = event['message']
+        user = event['user']
+        state = event['state']
+        label = event['label']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'message': message,
+            'state': state,
+            'user': user,
+            'label': label
+        }))
+
+    def send_message(self, message):
+        self.send(text_data=json.dumps(message))

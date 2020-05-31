@@ -1,0 +1,25 @@
+{% extends "login/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block body %}
+
+<title>Register</title>
+{% if registered %}
+<h2>Thanks For registering</h2>
+{% else %}
+<h2>Registration Form:</h2>
+<div class="container">
+  <div style="width: 50%;">
+    <form method="POST" class="form-group">
+      {% csrf_token %}
+      {{user_form|crispy}}
+      <input type="submit" value="Submit" />
+    </form>
+  </div>
+</div>
+
+<h2>
+  {{error}}
+</h2>
+{% endif %} {% endblock %}
