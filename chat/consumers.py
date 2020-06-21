@@ -55,7 +55,12 @@ class ChatConsumer(WebsocketConsumer):
 
         # FETCH MESSAGES
         if command == 'fetch messages':
-            messages = Messages.objects.filter(chat_id=chat_id)
+            print(chat_id)
+            if label == 'private':
+                messages = Messages.objects.filter(
+                    private_chat__chat_id=chat_id)
+            elif label == 'room':
+                messages = Messages.objects.filter(room_chat__name=chat_id)
             content = {
                 'state': 'fetched_messages',
                 'user': user,
@@ -66,10 +71,15 @@ class ChatConsumer(WebsocketConsumer):
 
         # SAVE MESSAGES
         else:
+            print(chat_id, 'tt')
             message = text_data_json['message']
             user = text_data_json['user']
-            new_message = Messages(
-                user=user, chat_id=chat_id, messages=message)
+            if label == 'private':
+                new_message = Messages(
+                    user=user, private_chat=c, messages=message)
+            elif label == 'room':
+                new_message = Messages(
+                    user=user, room_chat=c, messages=message)
             new_message.save()
 
             # Send message to room group

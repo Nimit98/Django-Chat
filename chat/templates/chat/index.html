@@ -1,53 +1,84 @@
-<!DOCTYPE html>
-<html>
+{% extends 'chat/base.html' %}
 
-<head>
-  <meta charset="utf-8" />
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <title>Chat Rooms</title>
-</head>
+{% load static %}
+{% block content %}
 
-<body>
-  <h1>{{request.user.username}}</h1>
-  What chat room would you like to enter?<br />
-  <input id="room-name-input" type="text" size="100" /><br />
-  <button onclick="room_id()">Enter Room</button><br />
+<body id="index">
+  <div class="container">
+    <div class="shadow p-3 mt-4 mb-5 bg-white rounded">
 
-  {% for user in users %}
-  <a href="{% url 'chat:get_id' pk=user.pk %}">{{user.username}}</a>
-  {% endfor %}
+      <form action="room/" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Enter a Room</label>
+          <input class="form-control" id="room-name-input" type="text" size="100" />
+        </div>
+        <button class="btn btn-info" onclick="room_id()">Enter Room</button><br />
+      </form>
 
-  <script>
-    document.querySelector("#room-name-input").focus();
-    document.querySelector("#room-name-input").onkeyup = function (e) {
-      if (e.keyCode === 13) {
-        // enter, return
-        document.querySelector("#room-name-submit").click();
-      }
-    };
+      <div class="mt-2 list-group">
+        <p class="lead">Users</p>
+        {% for user in users %}
+        <a href="{% url 'chat:get_id' pk=user.pk %}"
+          class="list-group-item list-group-item-action">{{user.display_name}}</a>
+        {% endfor %}
+      </div>
 
-    function room_id() {
-      room = document.querySelector("#room-name-input").value
-      $.ajax({
-        type: 'POST',
-        url: "{% url 'chat:room_id' %}",
-        data: {
-          'room': room
-        },
-        success: function () {
-          window.location.pathname = "/chat/chat-room/" + room + "/";
-          console.log('submitted')
-        }
-      })
-    }
+      <div class="mt-2 list-group">
+        <p class="lead">Groups</p>
+        {% for room in rooms %}
+        <button value="{{room.room}}" onclick="getroom()"
+          class="list-group-item list-group-item-action">{{room.room}}</button>
+        {% endfor %}
+      </div>
 
-
-
-    document.querySelector("#room-name-submit").onclick = function (e) {
-      var roomName = document.querySelector("#room-name-input").value;
-      window.location.pathname = "/chat/" + roomName + "/";
-    };
-  </script>
+    </div>
+  </div>
 </body>
+<script>
+  document.querySelector("#room-name-input").focus();
+  document.querySelector("#room-name-input").onkeyup = function (e) {
+    if (e.keyCode === 13) {
+      // enter, return
+      document.querySelector("#room-name-submit").click();
+    }
+  };
 
-</html>
+  function getroom(e) {
+    var roomname = window.event.srcElement.textContent
+    $.ajax({
+      type: 'POST',
+      url: "{% url 'chat:room_id' %}",
+      data: {
+        'room': roomname
+      },
+      success: function () {
+        window.location.pathname = "/chat/chat-room/" + roomname + "/";
+        console.log('submitted')
+      }
+    })
+  }
+
+  function room_id() {
+    room = document.querySelector("#room-name-input").value
+    $.ajax({
+      type: 'POST',
+      url: "{% url 'chat:room_id' %}",
+      data: {
+        'room': room
+      },
+      success: function () {
+        window.location.pathname = "/chat/chat-room/" + room + "/";
+        console.log('submitted')
+      }
+    })
+  }
+
+
+
+  document.querySelector("#room-name-submit").onclick = function (e) {
+    var roomName = document.querySelector("#room-name-input").value;
+    window.location.pathname = "/chat/" + roomName + "/";
+  };
+</script>
+{% endblock %}

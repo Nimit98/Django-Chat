@@ -26,13 +26,13 @@ def register(request):
             # EXTRA
 
             user = User.objects.get(username=username.username)
-            new_user = UserList(user=user)
+            new_user = UserList(user=user, display_name=username.username)
             new_user.save()
 
             # TILL HERE
-
             registered = True
-            return render(request, 'login/register.html', {'registered': registered})
+            login(request, user)
+            return HttpResponseRedirect('/chat/')
         else:
             print(user_form.errors)
             return render(request, 'login/register.html', {'registered': registered, 'user_form': user_form})

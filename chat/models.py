@@ -5,6 +5,7 @@ import uuid
 
 class UserList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    display_name = models.CharField(max_length=100)
     userlist_id = models.CharField(default=uuid.uuid4, max_length=100)
 
     def __str__(self):
@@ -13,6 +14,8 @@ class UserList(models.Model):
 
 class RoomChat(models.Model):
     name = models.CharField(max_length=20, unique=True)
+    admin = models.ForeignKey(
+        User, on_delete=models.CASCADE, blank=True, null=True)
     room_id = models.CharField(default=uuid.uuid4, max_length=100)
 
     def __str__(self):
@@ -37,8 +40,12 @@ class Chat(models.Model):
 
 
 class Messages(models.Model):
-    chat_id = models.CharField(max_length=200)
+    private_chat = models.ForeignKey(
+        Chat, models.CASCADE, blank=True, null=True)
+    room_chat = models.ForeignKey(
+        RoomChat, models.CASCADE, blank=True, null=True)
     messages = models.CharField(max_length=200)
+    documents = models.FileField(default='documents/')
     user = models.CharField(max_length=200)
 
     def __str__(self):
