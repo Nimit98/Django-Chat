@@ -1,0 +1,22 @@
+{% extends 'chat/base.html' %}
+
+{% block content %}
+<div class="container shadow p-3 mt-4 mb-5 bg-white rounded">
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            {% for user in users %}
+            <div class="form-check">
+                <input name="users[]" class="form-check-input" type="checkbox" value="{{user.id}}" id="defaultCheck1">
+                <label class="form-check-label" for="defaultCheck1">
+                    {{user.user}}
+                </label>
+            </div>
+
+            {% endfor %}
+            <button class="btn btn-success">Add</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

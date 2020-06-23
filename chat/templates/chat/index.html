@@ -7,28 +7,41 @@
   <div class="container">
     <div class="shadow p-3 mt-4 mb-5 bg-white rounded">
 
-      <form action="room/" method="POST">
+      <form method="POST">
         {% csrf_token %}
         <div class="form-group">
-          <label>Enter a Room</label>
+          <label>Create a Room</label>
           <input class="form-control" id="room-name-input" type="text" size="100" />
         </div>
-        <button class="btn btn-info" onclick="room_id()">Enter Room</button><br />
+        <button class="btn btn-info" onclick="create_room()">Create</button><br />
       </form>
 
       <div class="mt-2 list-group">
         <p class="lead">Users</p>
         {% for user in users %}
-        <a href="{% url 'chat:get_id' pk=user.pk %}"
-          class="list-group-item list-group-item-action">{{user.display_name}}</a>
+        <div class="list-group-item list-group-item-action">
+          <a class="btn" href="{% url 'chat:get_id' pk=user.pk %}">{{user.display_name}}</a>
+        </div>
         {% endfor %}
       </div>
 
       <div class="mt-2 list-group">
         <p class="lead">Groups</p>
         {% for room in rooms %}
-        <button value="{{room.room}}" onclick="getroom()"
-          class="list-group-item list-group-item-action">{{room.room}}</button>
+        <div class="list-group-item list-group-item-action">
+          <div class="float-right">
+            <button id="dropdownMenu2" data-toggle="dropdown" class="btn"><i class="fa fa-ellipsis-v"></i></button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+              <a href="{% url 'chat:delete' pk=room.id %}?leave_room" class="dropdown-item">Leave Group</a>
+              {% if room.room.admin.username == request.user.username %}
+              <div class="dropdown-divider"></div>
+              <a href="{% url 'chat:delete' pk=room.id %}?delete_room" class="dropdown-item">Delete Group</a>
+              <a href="{% url 'chat:add_users' pk=room.room.id %}" class="dropdown-item">Add Users</a>
+              {% endif %}
+            </div>
+          </div>
+          <button class="btn" value="{{room.room.room_id}}" onclick="getroom()">{{room.room}}</button>
+        </div>
         {% endfor %}
       </div>
 
@@ -44,16 +57,36 @@
     }
   };
 
+  function create_room() {
+    console.log('hh')
+    room = document.querySelector("#room-name-input").value
+    $.ajax({
+      type: 'POST',
+      url: "{% url 'chat:create_room' %}",
+      data: {
+        'room': room,
+
+      },
+      success: function (data) {
+        console.log(data.room)
+        window.location.pathname = "/chat/chat-room/" + data.room + "/";
+        console.log('submitted')
+      }
+    })
+  }
+
   function getroom(e) {
+    var roomid = window.event.srcElement.value
     var roomname = window.event.srcElement.textContent
     $.ajax({
       type: 'POST',
       url: "{% url 'chat:room_id' %}",
       data: {
-        'room': roomname
+        'room': roomid,
+        'room_name': roomname,
       },
       success: function () {
-        window.location.pathname = "/chat/chat-room/" + roomname + "/";
+        window.location.pathname = "/chat/chat-room/" + roomid + "/";
         console.log('submitted')
       }
     })

@@ -7,7 +7,8 @@
         <h2><a href="{% url 'chat:index' %}">Chat </a><i class="fas fa-comments"></i></h2>
         {% if user.is_authenticated %}
         <a href="{% url 'logout' %}" class="btn btn-outline-warning">Logout</a>
-        <a href="{% url 'chat:change' %}?name" class="btn btn-light">Change Display Name</a>
+        <br>
+        <a href="{% url 'chat:change' %}?name" class="mt-2 btn btn-primary">Change Username</a>
         {% else %}
         <a href="{% url 'login' %}" class="btn btn-outline-success">Login</a>
         <a href="{% url 'register' %}" class="btn btn-outline-success">Register</a>

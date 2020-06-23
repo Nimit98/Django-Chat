@@ -1,0 +1,11 @@
+{% extends 'chat/base.html' %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    <div class="container">
+        <p class="container alert alert-danger">You want to {{status}} the group?</p>
+        <button class="btn btn-success" type="submit">Confirm</button>
+    </div>
+</form>
+{% endblock %}

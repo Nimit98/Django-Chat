@@ -50,7 +50,7 @@ class ChatConsumer(WebsocketConsumer):
             c = Chat.objects.get(chat_id=chat_id)
             label = 'private'
         except Chat.DoesNotExist:
-            c = RoomChat.objects.get(name=chat_id)
+            c = RoomChat.objects.get(room_id=chat_id)
             label = 'room'
 
         # FETCH MESSAGES
@@ -60,7 +60,7 @@ class ChatConsumer(WebsocketConsumer):
                 messages = Messages.objects.filter(
                     private_chat__chat_id=chat_id)
             elif label == 'room':
-                messages = Messages.objects.filter(room_chat__name=chat_id)
+                messages = Messages.objects.filter(room_chat__room_id=chat_id)
             content = {
                 'state': 'fetched_messages',
                 'user': user,

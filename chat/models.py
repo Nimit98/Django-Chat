@@ -13,7 +13,7 @@ class UserList(models.Model):
 
 
 class RoomChat(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=20, unique=False)
     admin = models.ForeignKey(
         User, on_delete=models.CASCADE, blank=True, null=True)
     room_id = models.CharField(default=uuid.uuid4, max_length=100)
