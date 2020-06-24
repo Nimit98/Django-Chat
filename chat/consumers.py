@@ -4,7 +4,7 @@ import json
 from channels.layers import get_channel_layer
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import Messages, RoomChat, Chat
-import time
+import datetime
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -34,10 +34,15 @@ class ChatConsumer(WebsocketConsumer):
         return result
 
     def message_to_json(self, message, chat_id):
+
+        time = str(message.time)
+        time = time[:5]
         return {
             'user': message.user,
             'content': message.messages,
-            'chat_id': chat_id
+            'chat_id': chat_id,
+            'time': time,
+            'date': str(message.date)
         }
 
     # Receive message from WebSocket
@@ -82,6 +87,10 @@ class ChatConsumer(WebsocketConsumer):
                     user=user, room_chat=c, messages=message)
             new_message.save()
 
+            time = str(datetime.datetime.now())
+            [date, time] = time.split(" ")
+            time = time[:5]
+
             # Send message to room group
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name,
@@ -90,7 +99,8 @@ class ChatConsumer(WebsocketConsumer):
                     'message': message,
                     'user': user,
                     'label': label,
-                    'state': 'sent_message'
+                    'state': 'sent_message',
+                    'time': time,
                 }
             )
 
@@ -100,13 +110,15 @@ class ChatConsumer(WebsocketConsumer):
         user = event['user']
         state = event['state']
         label = event['label']
+        time = event['time']
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': message,
             'state': state,
             'user': user,
-            'label': label
+            'label': label,
+            'time': time
         }))
 
     def send_message(self, message):

@@ -59,16 +59,16 @@ def room(request, room_name):
                 userlist_id=opposite_user.userlist_id1)
             chat_name = chat_name.user.username
         return render(request, 'chat/room.html', {
-            'room_name': room_name,
+            'room_id': room_name,
             'chat_name': chat_name,
             'group': 'private',
         })
     except Chat.DoesNotExist:
+
         users = AddUser.objects.filter(room__room_id=room_name)
         print(users)
         room = users[0].room.name
         roomId = users[0].room.id
-        print(roomId, 'id')
         if request.user == users[0].room.admin:
             admin = True
         else:

@@ -47,6 +47,8 @@ class Messages(models.Model):
     messages = models.CharField(max_length=200)
     documents = models.FileField(default='documents/')
     user = models.CharField(max_length=200)
+    time = models.TimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user} - {self.messages}'

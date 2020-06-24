@@ -85,19 +85,19 @@
           user == message.user
             ? (document.querySelector(
               "#chat-log"
-            ).innerHTML += `<p class="my_mess">${message.content}</p>`)
+            ).innerHTML += `<div class="my_mess"><time class="m-0 small float-right">${message.time}.</time>${message.content}</div>`)
             : (document.querySelector(
               "#chat-log"
-            ).innerHTML += `<p class="received">${message.content}</p>`);
+            ).innerHTML += `<div class="received"><time class="m-0 small float-right">${message.time}.</time>${message.content}</div>`);
         });
       } else {
         user == data.user
           ? (document.querySelector(
             "#chat-log"
-          ).innerHTML += `<p class="my_mess">${data.message}</p>`)
+          ).innerHTML += `<div class="my_mess"> <time class="m-0 small float-right">${data.time}</time> ${data.message}</div>`)
           : (document.querySelector(
             "#chat-log"
-          ).innerHTML += `<p class="received">${data.message}</p>`);
+          ).innerHTML += `<div class="received"><time class="m-0 small float-right">${data.time}</time>${data.message}</div>`);
       }
     }
     else {
@@ -106,19 +106,19 @@
           user == message.user
             ? (document.querySelector(
               "#chat-log"
-            ).innerHTML += `<p class="my_mess"><small class='text-danger'>${message.user}: </small>${message.content}</p>`)
+            ).innerHTML += `<div class="my_mess"><time class="m-0 small float-right">${message.time}.</time><small class='text-danger'>${message.user}: </small>${message.content}</div>`)
             : (document.querySelector(
               "#chat-log"
-            ).innerHTML += `<p class="received"><small class='text-danger'>${message.user}: </small>${message.content}</p>`);
+            ).innerHTML += `<div class="received"><time class="m-0 small float-right">${message.time}.</time><small class='text-danger'>${message.user}: </small>${message.content}</div>`);
         });
       } else {
         user == data.user
           ? (document.querySelector(
             "#chat-log"
-          ).innerHTML += `<p class="my_mess"><small class='text-danger'>${data.user}: </small>${data.message}</p>`)
+          ).innerHTML += `<div class="my_mess"><time class="m-0 small float-right">${data.time}.</time><small class='text-danger'>${data.user}: </small>${data.message}</div>`)
           : (document.querySelector(
             "#chat-log"
-          ).innerHTML += `<p class="received"><small class='text-danger'>${data.user}: </small>${data.message}</p>`);
+          ).innerHTML += `< div="received"><time class="m-0 small float-right">${data.time}.</time><small class='text-danger'>${data.user}: </small>${data.message}</>`);
       }
     }
     document.getElementById('chat-log').lastChild.scrollIntoView(false);
@@ -138,6 +138,7 @@
   };
 
   setTimeout(() => {
+    console.log(roomId)
     chatSocket.send(
       JSON.stringify({
         command: "fetch messages",
