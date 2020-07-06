@@ -7,23 +7,35 @@
   <div class="container">
     <div class="shadow p-3 mt-4 mb-5 bg-white rounded">
 
-      <form method="POST">
-        {% csrf_token %}
-        <div class="form-group">
-          <label>Create a Room</label>
-          <input class="form-control" id="room-name-input" type="text" size="100" />
-        </div>
-        <button class="btn btn-info" onclick="create_room()">Create</button><br />
-      </form>
+
+
+      <div class="form-group">
+        <label>Create a Room</label>
+        <input class="form-control" id="room-name-input" type="text" size="100" />
+      </div>
+      <button class="btn btn-info" onclick="create_room()">Create</button><br />
+
+
+      <!-- Private Chat -->
 
       <div class="mt-2 list-group">
         <p class="lead">Users</p>
         {% for user in users %}
         <div class="list-group-item list-group-item-action">
-          <a class="btn" href="{% url 'chat:get_id' pk=user.pk %}">{{user.display_name}}</a>
+          <a class="btn" href="{% url 'chat:get_id' pk=user.pk %}">{{user.display_name}}
+            <!-- Notification -->
+            {% for notify in user.notification.all %}
+            {% if request.user == notify.receiver and notify.new_message %}
+            <small class="badge badge-success">{{notify.count}}</small>
+            {% endif %}
+            {% endfor %}
+          </a>
+
         </div>
         {% endfor %}
       </div>
+
+      <!-- Groups -->
 
       <div class="mt-2 list-group">
         <p class="lead">Groups</p>
@@ -32,15 +44,23 @@
           <div class="float-right">
             <button id="dropdownMenu2" data-toggle="dropdown" class="btn"><i class="fa fa-ellipsis-v"></i></button>
             <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
-              <a href="{% url 'chat:delete' pk=room.id %}?leave_room" class="dropdown-item">Leave Group</a>
+              <a href="{% url 'chat:room_rel' pk=room.id %}?leave_room" class="dropdown-item">Leave Group</a>
               {% if room.room.admin.username == request.user.username %}
               <div class="dropdown-divider"></div>
-              <a href="{% url 'chat:delete' pk=room.id %}?delete_room" class="dropdown-item">Delete Group</a>
+              <a href="{% url 'chat:room_rel' pk=room.id %}?change_name" class="dropdown-item">Change Name</a>
+              <a href="{% url 'chat:room_rel' pk=room.id %}?delete_room" class="dropdown-item">Delete Group</a>
               <a href="{% url 'chat:add_users' pk=room.room.id %}" class="dropdown-item">Add Users</a>
               {% endif %}
             </div>
           </div>
-          <button class="btn" value="{{room.room.room_id}}" onclick="getroom()">{{room.room}}</button>
+          <button class="btn" value="{{room.room.room_id}}" onclick="getroom()">{{room.room}}
+            <!-- Notification -->
+            {% for notify in room.room.notification.all %}
+            {% if request.user == notify.user and notify.new_message %}
+            <small class="badge badge-success">{{notify.count}}</small>
+            {% endif %}
+            {% endfor %}
+          </button>
         </div>
         {% endfor %}
       </div>
@@ -53,26 +73,28 @@
   document.querySelector("#room-name-input").onkeyup = function (e) {
     if (e.keyCode === 13) {
       // enter, return
+      create_room()
       document.querySelector("#room-name-submit").click();
     }
   };
 
   function create_room() {
-    console.log('hh')
     room = document.querySelector("#room-name-input").value
-    $.ajax({
-      type: 'POST',
-      url: "{% url 'chat:create_room' %}",
-      data: {
-        'room': room,
+    if (room.trim() != '') {
+      $.ajax({
+        type: 'POST',
+        url: "{% url 'chat:create_room' %}",
+        data: {
+          'room': room,
 
-      },
-      success: function (data) {
-        console.log(data.room)
-        window.location.pathname = "/chat/chat-room/" + data.room + "/";
-        console.log('submitted')
-      }
-    })
+        },
+        success: function (data) {
+          console.log(data.room)
+          window.location.pathname = "/chat/chat-room/" + data.room + "/";
+          console.log('submitted')
+        }
+      })
+    }
   }
 
   function getroom(e) {

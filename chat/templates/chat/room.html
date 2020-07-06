@@ -151,14 +151,16 @@
   document.querySelector("#chat-message-submit").onclick = function (e) {
     const messageInputDom = document.querySelector("#chat-message-input");
     const message = messageInputDom.value;
-    chatSocket.send(
-      JSON.stringify({
-        command: "new message",
-        message: message,
-        user: user,
-        chat_id: roomId,
-      })
-    );
+    if (message.trim() != '') {
+      chatSocket.send(
+        JSON.stringify({
+          command: "new message",
+          message: message,
+          user: user,
+          chat_id: roomId,
+        })
+      )
+    }
     messageInputDom.value = "";
   };
 </script>

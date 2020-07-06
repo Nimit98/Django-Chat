@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import UserList, Chat, Messages, RoomChat, AddUser
+from .models import UserList, Chat, Messages, RoomChat, AddUser, Notification, NotificationPrivate
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -41,11 +41,19 @@ def get_id(request, pk):
             chat.chat_id = chat_id
             chat.save()
     c = chat_id[:7]
+    try:
+        notify = NotificationPrivate.objects.get(
+            receiver=sent_user.user, sender=receiver_user)
+        notify.new_message = False
+        notify.count = 0
+        notify.save()
+    except:
+        pass
     return HttpResponseRedirect(reverse('chat:room', args=(c,)))
 
 
+@login_required(login_url='/login/')
 def room(request, room_name):
-    print(room_name, 'roomihh')
     try:
         opposite_user = Chat.objects.get(chat_id=room_name)
         user = UserList.objects.get(user__username=request.user.username)
@@ -66,14 +74,12 @@ def room(request, room_name):
     except Chat.DoesNotExist:
 
         users = AddUser.objects.filter(room__room_id=room_name)
-        print(users)
         room = users[0].room.name
         roomId = users[0].room.id
         if request.user == users[0].room.admin:
             admin = True
         else:
             admin = False
-        print(room_name, 'll')
         chat_name = room
         return render(request, 'chat/room.html', {
             'room_id': room_name,
@@ -103,23 +109,25 @@ def create_room(request):
 def room_id(request):
     roomid = request.POST.get('room')
     room_name = request.POST.get('room_name')
-
-    print(roomid, 'jjjj')
+    try:
+        notify = Notification.objects.get(
+            user=request.user, room_chat__room_id=roomid)
+        notify.new_message = False
+        notify.count = 0
+        notify.save()
+    except:
+        pass
     room = RoomChat.objects.get(room_id=roomid)
     return HttpResponseRedirect(reverse('chat:room', args=(roomid,)))
 
 
 def add_users(request, pk):
-    # ad = AddUser.objects.get(id=pk)
-    # print(ad)
     added = AddUser.objects.filter(room=pk)
     room = added[0].room
     users = []
     for u in added:
         users.append(User.objects.get(username=u.user.username))
-    print(users)
     to_add = UserList.objects.exclude(user__in=users)
-    print(to_add)
     if request.method == 'POST':
         users = request.POST.getlist('users[]')
         for u in users:
@@ -152,24 +160,29 @@ def changeSettings(request):
             return HttpResponseRedirect(reverse('index'))
         else:
             messages = Messages.objects.filter(user=request.user.username)
-            print(messages)
             return render(request, 'chat/change.html', {'change': 'name'})
 
 
-def delete(request, pk):
+def room_rel(request, pk):
+    room = AddUser.objects.get(id=pk)
     if 'leave_room' in request.GET:
-        room = AddUser.objects.get(id=pk)
         if request.method == 'POST':
             room.delete()
             return HttpResponseRedirect(reverse('chat:index'))
         return render(request, 'chat/delete_leave.html', {'status': 'leave'})
     if 'delete_room' in request.GET:
-        room = AddUser.objects.get(id=pk)
         room = room.room
         if request.method == 'POST':
             room.delete()
             return HttpResponseRedirect(reverse('chat:index'))
         return render(request, 'chat/delete_leave.html', {'status': 'delete'})
+    if 'change_name' in request.GET:
+        room = room.room
+        if request.method == 'POST':
+            room.name = request.POST.get('change')
+            room.save()
+            return HttpResponseRedirect(reverse('chat:index'))
+        return render(request, 'chat/delete_leave.html', {'status': 'change_name'})
 
 
 def remove_user(request, pk):

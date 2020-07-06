@@ -3,8 +3,9 @@ from asgiref.sync import async_to_sync
 import json
 from channels.layers import get_channel_layer
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .models import Messages, RoomChat, Chat
+from .models import Messages, RoomChat, Chat, AddUser, Notification, UserList, NotificationPrivate
 import datetime
+from django.contrib.auth.models import User
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -45,7 +46,42 @@ class ChatConsumer(WebsocketConsumer):
             'date': str(message.date)
         }
 
-    # Receive message from WebSocket
+    def notification(self, chat_id, label, user, c):
+        current = UserList.objects.get(user__username=user)
+        if label == 'room':
+            users = AddUser.objects.filter(
+                room__room_id=chat_id).exclude(user__username=user)
+            for u in users:
+                try:
+                    exist = Notification.objects.get(user=u.user, room_chat=c)
+                    exist.new_message = True
+                    exist.count += 1
+                    exist.save()
+                except:
+                    new = Notification(user=u.user, room_chat=c)
+                    new.new_message = True
+                    new.count += 1
+                    new.save()
+        elif label == 'private':
+            if c.userlist_id1 == current.userlist_id:
+                opp = c.userlist_id2
+            else:
+                opp = c.userlist_id1
+            opp = UserList.objects.get(userlist_id=opp)
+            try:
+                exist = NotificationPrivate.objects.get(
+                    sender=current, receiver=opp.user)
+                exist.new_message = True
+                exist.count += 1
+                exist.save()
+            except:
+                new = NotificationPrivate(sender=current, receiver=opp.user)
+                new.new_message = True
+                new.count += 1
+                new.save()
+
+            # Receive message from WebSocket
+
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         command = text_data_json['command']
@@ -60,7 +96,6 @@ class ChatConsumer(WebsocketConsumer):
 
         # FETCH MESSAGES
         if command == 'fetch messages':
-            print(chat_id)
             if label == 'private':
                 messages = Messages.objects.filter(
                     private_chat__chat_id=chat_id)
@@ -76,7 +111,7 @@ class ChatConsumer(WebsocketConsumer):
 
         # SAVE MESSAGES
         else:
-            print(chat_id, 'tt')
+            self.notification(chat_id, label, user, c)
             message = text_data_json['message']
             user = text_data_json['user']
             if label == 'private':

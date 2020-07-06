@@ -1,11 +1,16 @@
 {% extends 'chat/base.html' %}
 
 {% block content %}
-<form method="POST">
-    {% csrf_token %}
-    <div class="container">
+<div class="container">
+    <form method="POST">
+        {% csrf_token %}
+        {% if status == 'change_name' %}
+        <h3 class="lead">Change Group Name</h3>
+        <input name='change' class="form-control" type="text">
+        {% else %}
         <p class="container alert alert-danger">You want to {{status}} the group?</p>
-        <button class="btn btn-success" type="submit">Confirm</button>
-    </div>
-</form>
+        {% endif %}
+        <button class="mt-2 btn btn-success" type="submit">Confirm</button>
+    </form>
+</div>
 {% endblock %}
